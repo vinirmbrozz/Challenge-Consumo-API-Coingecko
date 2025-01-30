@@ -1,3 +1,4 @@
+// Classe para validação dos dados de usuários
 class Validar {
     constructor(nome, email, senha, funcao) {
         this.nome   = nome;
@@ -7,6 +8,7 @@ class Validar {
     }
 
     validarCadastro() {
+        // Validação para criar usuário (POST)
         const erros = [];
         
         // Expressão regular para validar e-mail (sem caracteres inválidos).
@@ -21,6 +23,7 @@ class Validar {
     }
 
     validarAlteracao() {
+        // Validação para alterar usuário (PUT)
         // Pode ou não ter os campos
         // Podendo ter um ou todos
 

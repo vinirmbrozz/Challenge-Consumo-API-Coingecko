@@ -117,8 +117,8 @@ app.put("/usuarios/:id", async (req, res) => {
             values.push(user.funcao);
             index++;
         }
-        console.log(updates, values)
 
+        // Se nenhum campo foi enviado
         if (updates.length === 0) return res.status(400).json({ message: "Nenhum campo para atualizar" });
 
         values.push(id);
@@ -126,9 +126,7 @@ app.put("/usuarios/:id", async (req, res) => {
         const query  = `UPDATE usuarios SET ${updates.join(", ")} WHERE id = $${index} RETURNING *`;
         const result = await pool.query(query, values);
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({ message: "Usuário não encontrado" });
-        }
+        if (result.rows.length === 0) return res.status(404).json({ message: "Usuário não encontrado" });
 
         res.json({
             message: "Usuário atualizado com sucesso",
