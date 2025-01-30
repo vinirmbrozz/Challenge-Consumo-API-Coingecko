@@ -50,7 +50,7 @@ app.post("/login", async (req, res) => {
 app.post("/usuarios", async (req, res) => {
     // Validação da classe
     const user = new Validar(req.body.nome, req.body.email, req.body.senha, req.body.funcao)
-    const erros = user.validar()
+    const erros = user.validarCadastro()
     console.log("VOLTEI DO VALIDAR", erros)
     if (!erros.status) return res.status(400).json(erros)
     
@@ -74,18 +74,69 @@ app.post("/usuarios", async (req, res) => {
 });
 
 // Atualizar usuário
-app.put("/usuarios/:id", /*authenticateToken,*/ async (req, res) => {
+app.put("/usuarios/:id", async (req, res) => {
     const { id } = req.params;
-    const { nome, email, funcao } = req.body;
+    const user = new Validar(req.body.nome, req.body.email, req.body.senha, req.body.funcao)
+    const erros = user.validarAlteracao()
 
-    // Vai ter que ser um update para cada campo
+    if (!erros.status) return res.status(400).json(erros)
+
     try {
-        const result = await pool.query(
-            "UPDATE usuarios SET nome = $1, email = $2, funcao = $3 WHERE id = $4 RETURNING *", 
-            [nome, email, funcao, id]
-        );
-        if (result.rows.length === 0) return res.status(404).json({ message: "Usuário não encontrado" });
-        res.json(result.rows[0]);
+        // Criar array para armazenar os campos a serem atualizados
+        const updates = [];
+        const values  = [];
+        let index = 1;
+
+        // Se 'nome' foi enviado no body
+        // Adiciona "nome = $1" no array de updates
+        // Adiciona o valor de 'nome' no array de valores
+        /*{
+            "nome": "Carlos",
+            "funcao": "admin"
+        }*/
+        // updates = ["nome = $1", "funcao = $2"]; 
+        // values  = ["Carlos", "admin"];
+        if (user.nome) {
+            updates.push(`nome = $${index}`);
+            values.push(user.nome);
+            index++;
+        }
+        if (user.email) {
+            updates.push(`email = $${index}`);
+            values.push(user.email);
+            index++;
+        }
+        if (user.senha) {
+            const hashedPassword = await bcrypt.hash(user.senha, 10);
+            updates.push(`senha = $${index}`);
+            values.push(hashedPassword);
+            index++;
+        }
+        if (user.funcao) {
+            updates.push(`funcao = $${index}`);
+            values.push(user.funcao);
+            index++;
+        }
+        console.log(updates, values)
+
+        if (updates.length === 0) return res.status(400).json({ message: "Nenhum campo para atualizar" });
+
+        values.push(id);
+
+        const query  = `UPDATE usuarios SET ${updates.join(", ")} WHERE id = $${index} RETURNING *`;
+        const result = await pool.query(query, values);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Usuário não encontrado" });
+        }
+
+        res.json({
+            message: "Usuário atualizado com sucesso",
+            usuario: {
+                id  : result.rows[0].id,
+                nome: result.rows[0].nome
+            }
+        });
 
     } catch (error) {
         res.status(500).json({ message: "Erro ao atualizar usuário", error });
