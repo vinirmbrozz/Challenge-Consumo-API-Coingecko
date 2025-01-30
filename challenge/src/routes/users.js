@@ -51,11 +51,13 @@ app.post("/usuarios", async (req, res) => {
     // Validação da classe
     const user = new Validar(req.body.nome, req.body.email, req.body.senha, req.body.funcao)
     const erros = user.validar()
-    if (!erros.valido) return res.status(400).json(erros)
-
+    console.log("VOLTEI DO VALIDAR", erros)
+    if (!erros.status) return res.status(400).json(erros)
+    
     try {
         // Criptografia da senha
         const hashedPassword = await bcrypt.hash(user.senha, 10);
+        console.log("INSERINDO NO BANCO", user)
         const result = await pool.query(
             "INSERT INTO usuarios (nome, email, senha, funcao) VALUES ($1, $2, $3, $4) RETURNING *", 
             [user.nome, user.email, hashedPassword, user.funcao]
