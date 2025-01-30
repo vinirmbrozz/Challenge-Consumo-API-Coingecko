@@ -56,7 +56,6 @@ app.post("/usuarios", async (req, res) => {
     try {
         // Criptografia da senha
         const hashedPassword = await bcrypt.hash(user.senha, 10);
-        console.log("VOU CRIAR O USUARIO", user.nome, user.email, hashedPassword, user.funcao, env.DATABASE_URL)
         const result = await pool.query(
             "INSERT INTO usuarios (nome, email, senha, funcao) VALUES ($1, $2, $3, $4) RETURNING *", 
             [user.nome, user.email, hashedPassword, user.funcao]
@@ -76,7 +75,8 @@ app.post("/usuarios", async (req, res) => {
 app.put("/usuarios/:id", /*authenticateToken,*/ async (req, res) => {
     const { id } = req.params;
     const { nome, email, funcao } = req.body;
-    
+
+    // Vai ter que ser um update para cada campo
     try {
         const result = await pool.query(
             "UPDATE usuarios SET nome = $1, email = $2, funcao = $3 WHERE id = $4 RETURNING *", 

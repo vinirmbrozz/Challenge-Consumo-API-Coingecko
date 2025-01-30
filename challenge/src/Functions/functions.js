@@ -17,13 +17,9 @@ const getCripto = async (req, res) => {
         const { currency, id } = req.query;
         console.log(currency)
 
-        if (!currency) {
-            return res.status(400).json({ message: "Moeda não informada!" });
-        }
+        if (!currency) return res.status(400).json({ message: "Moeda não informada!" });
 
-        if (!id) {
-            return res.status(400).json({ message: "Id da criptomoeda nao informado! Exemplo: id=bitcoin, id=ethereum" });
-        }
+        if (!id)       return res.status(400).json({ message: "Id da criptomoeda nao informado! Exemplo: id=bitcoin, id=ethereum" });
 
         // Ou se não for nenhum das moedas: [USD, EUR, BTC] lowerCase
         if (!["usd", "eur"].includes(currency.toLowerCase())) {
@@ -38,7 +34,6 @@ const getCripto = async (req, res) => {
         };
         const response = await fetch(url, options);
         const data = await response.json();
-        console.log("ESTOU COM O DATA")
         const criptomoedas = [];
 
         // Iterando na lista de objetos que a API da Coingecko retorna
