@@ -16,7 +16,7 @@ const getCripto = async (req, res) => {
     try {
         console.log("VOU BUSCAR AS CRIPTOMOEDAS")
         // RECEBE A CURRENCY 
-        const { currency } = req.query;
+        const { currency, id } = req.query;
         console.log(currency)
 
         if (!currency) {
@@ -24,8 +24,8 @@ const getCripto = async (req, res) => {
         }
 
         // Ou se não for nenhum das moedas: [USD, EUR, BTC] lowerCase
-        if (!["usd", "eur", "btc"].includes(currency.toLowerCase())) {
-            return res.status(400).json({ message: "Moeda inválida! As moedas disponíveis são: [USD, EUR, BTC]" });
+        if (!["usd", "eur"].includes(currency.toLowerCase())) {
+            return res.status(400).json({ message: "Moeda inválida! As moedas disponíveis são: [USD, EUR]" });
         }
 
         // Monta a URL
@@ -76,7 +76,7 @@ const getCripto = async (req, res) => {
         console.log("RETORNANDO OS DADOS")
 
         // Retorna os dados para o cliente
-        res.json(criptomoedas);
+        res.json(criptomoedas.filter((criptomoeda) => criptomoeda.id_cripto === id));
 
     } catch (error) {
         console.error(error);

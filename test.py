@@ -10,7 +10,7 @@ headers = {
 }
 
 params = {
-    "vs_currency": "usd"
+    "vs_currency": "usd",
 }
 
 response = requests.get(url, headers=headers, params=params)
