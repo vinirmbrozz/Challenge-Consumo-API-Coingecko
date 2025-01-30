@@ -1,6 +1,5 @@
-import express from "express";
-import pg from "pg";
-import redis from "../ConexaoRedis/redisClient.js";
+import pg       from "pg";
+import redis    from "../ConexaoRedis/redisClient.js";
 
 const envjs = await redis.getConfig("ENV")
 let env = JSON.parse(envjs)
@@ -14,13 +13,16 @@ const pool = new Pool({
 
 const getCripto = async (req, res) => {
     try {
-        console.log("VOU BUSCAR AS CRIPTOMOEDAS")
         // RECEBE A CURRENCY 
         const { currency, id } = req.query;
         console.log(currency)
 
         if (!currency) {
             return res.status(400).json({ message: "Moeda não informada!" });
+        }
+
+        if (!id) {
+            return res.status(400).json({ message: "Id da criptomoeda nao informado! Exemplo: id=bitcoin, id=ethereum" });
         }
 
         // Ou se não for nenhum das moedas: [USD, EUR, BTC] lowerCase
@@ -69,13 +71,13 @@ const getCripto = async (req, res) => {
 
             // Executando a query de inserção
             const result = await pool.query(query, values);
-
+            
+            // Adicionando os dados no array para retornar para o cliente
             criptomoedas.push(result.rows[0]);
         }
 
-        console.log("RETORNANDO OS DADOS")
-
-        // Retorna os dados para o cliente
+        // Filtrando na lista, o id da criptomoeda que foi passada como parâmetro
+        // E retornando apenas os dados dessa criptomoeda
         res.json(criptomoedas.filter((criptomoeda) => criptomoeda.id_cripto === id));
 
     } catch (error) {

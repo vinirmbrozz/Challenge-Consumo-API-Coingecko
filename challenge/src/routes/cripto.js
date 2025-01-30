@@ -17,7 +17,6 @@ app.use(express.json());
 // Buscar na API da Coingecko todas as criptomoedas
 app.get("/cripto", async (req, res) => {
     try {
-        console.log("CHEGUEI NO ENDPOINT")
         const response = await getCripto(req, res);
         const data = await response.json();
         

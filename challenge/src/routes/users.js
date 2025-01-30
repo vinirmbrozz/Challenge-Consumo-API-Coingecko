@@ -1,8 +1,9 @@
-import express from "express";
-import pg from "pg";
-import redis from "../ConexaoRedis/redisClient.js";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import express  from "express";
+import pg       from "pg";
+import redis    from "../ConexaoRedis/redisClient.js";
+import jwt      from "jsonwebtoken";
+import bcrypt   from "bcrypt";
+import Validar  from "../Class/class.js"
 
 const envjs = await redis.getConfig("ENV")
 let env = JSON.parse(envjs)
@@ -12,9 +13,6 @@ const { Pool } = pg;
 const pool = new Pool({
     connectionString: env.DATABASE_URL
 });
-
-// AVISO IMPORTANTE !!
-// CRIAR UMA CLASSE PARA CADASTRO DE USUARIO
 
 app.use(express.json());
 // Autenticação JWT para usuários
@@ -40,7 +38,8 @@ app.post("/login", async (req, res) => {
         const validPassword = await bcrypt.compare(String(senha), user.senha);
         if (!validPassword) return res.status(401).json({ message: "Credenciais inválidas" });
 
-        const token = jwt.sign({ id: user.id, funcao: user.funcao }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        // const token = jwt.sign({ id: user.id, funcao: user.funcao }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        
         res.json({ token });
     } catch (error) {
         res.status(500).json({ message: "Erro ao autenticar", error });
@@ -49,17 +48,26 @@ app.post("/login", async (req, res) => {
 
 // Criar usuário
 app.post("/usuarios", async (req, res) => {
-    const { nome, email, senha, funcao } = req.body;
-    const hashedPassword = await bcrypt.hash(senha, 10); // criptografa a senha
-    
+    // Validação da classe
+    const user = new Validar(req.body.nome, req.body.email, req.body.senha, req.body.funcao)
+    const erros = user.validar()
+    if (!erros.valido) return res.status(400).json(erros)
+
     try {
-        console.log("VOU CRIAR O USUARIO", nome, email, hashedPassword, funcao, env.DATABASE_URL)
+        // Criptografia da senha
+        const hashedPassword = await bcrypt.hash(user.senha, 10);
+        console.log("VOU CRIAR O USUARIO", user.nome, user.email, hashedPassword, user.funcao, env.DATABASE_URL)
         const result = await pool.query(
             "INSERT INTO usuarios (nome, email, senha, funcao) VALUES ($1, $2, $3, $4) RETURNING *", 
-            [nome, email, hashedPassword, funcao]
+            [user.nome, user.email, hashedPassword, user.funcao]
         );
         res.status(201).json({ message: "Usuário criado com sucesso", user: result.rows[0].nome });
+
     } catch (error) {
+        // Tratamento de erro do PostgreSQL.
+        if (error.code === "23505") {
+            return res.status(400).json({ erro: "E-mail já cadastrado." });
+        }
         res.status(500).json({ message: "Erro ao criar usuário", error });
     }
 });
@@ -76,6 +84,7 @@ app.put("/usuarios/:id", /*authenticateToken,*/ async (req, res) => {
         );
         if (result.rows.length === 0) return res.status(404).json({ message: "Usuário não encontrado" });
         res.json(result.rows[0]);
+
     } catch (error) {
         res.status(500).json({ message: "Erro ao atualizar usuário", error });
     }
@@ -104,8 +113,8 @@ app.get("/usuarios", /*authenticateToken,*/ async (req, res) => {
                 "SELECT id, nome, email, funcao FROM usuarios"
             );
         }
-
         res.json(result.rows);
+
     } catch (error) {
         res.status(500).json({ message: "Erro ao buscar usuários", error });
     }
