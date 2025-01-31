@@ -10,6 +10,7 @@ app.use(express.json())
 const envjs = await redis.getConfig("ENV")
 let env = JSON.parse(envjs)
 
+// USANDO AS ROTAS
 app.use("/api", user)
 app.use("/api", cripto)
 

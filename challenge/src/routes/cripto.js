@@ -1,9 +1,8 @@
 import express           from "express";
 import pg                from "pg";
 import redis             from "../ConexaoRedis/redisClient.js";
-import getCripto         from "../Functions/functions.js";
+import functions         from "../Functions/functions.js";
 import swaggerDocs       from "../Functions/swagger.js";
-import authenticateToken from "../Functions/functions.js";
 
 const envjs = await redis.getConfig("ENV")
 let env = JSON.parse(envjs)
@@ -71,11 +70,11 @@ swaggerDocs(app, env.LISTEN_PORT)
 
 
 // Buscar na API da Coingecko todas as criptomoedas
-app.get("/cripto", authenticateToken.authenticateToken, async (req, res) => {
+app.get("/cripto", functions.authenticateToken, async (req, res) => {
     try {
         console.log("BUSCANDO CRIPTOMOEDAS")
         console.log(req.query)
-        const response = await getCripto.getCripto(req, res);
+        const response = await functions.getCripto(req, res);
         console.log("RESPOSTA", response)
         const data = await response.json();
         

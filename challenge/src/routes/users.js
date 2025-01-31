@@ -1,10 +1,10 @@
-import express      from "express";
-import pg           from "pg";
-import redis        from "../ConexaoRedis/redisClient.js";
-import jwt          from "jsonwebtoken";
-import bcrypt       from "bcrypt";
-import Validar      from "../Class/class.js"
-import swaggerDocs  from "../Functions/swagger.js";
+import express           from "express";
+import pg                from "pg";
+import jwt               from "jsonwebtoken";
+import bcrypt            from "bcrypt";
+import redis             from "../ConexaoRedis/redisClient.js";
+import Validar           from "../Class/class.js"
+import swaggerDocs       from "../Functions/swagger.js";
 import authenticateToken from "../Functions/functions.js";
 
 const envjs = await redis.getConfig("ENV")
@@ -41,8 +41,8 @@ app.post("/login", async (req, res) => {
         if (result.rows.length === 0) return res.status(401).json({ message: "Credenciais inválidas" });
 
         const user = result.rows[0];
-        // const validPassword = await bcrypt.compare(String(senha), user.senha);
-        // if (!validPassword) return res.status(401).json({ message: "Credenciais inválidas" });
+        const validPassword = await bcrypt.compare(String(senha), user.senha);
+        if (!validPassword) return res.status(401).json({ message: "Credenciais inválidas" });
 
         console.log("USUARIO", user)
 
@@ -58,7 +58,7 @@ app.post("/login", async (req, res) => {
 
 /**
  * @swagger
- * /usuarios:
+ * /api/usuarios:
  *   post:
  *     summary: Cria um novo usuário
  *     description: Rota para criar um usuário com nome, email, senha e função.
@@ -114,7 +114,7 @@ app.post("/usuarios", async (req, res) => {
 
 /**
  * @swagger
- * /usuarios/{id}:
+ * /api/usuarios/{id}:
  *   put:
  *     summary: Atualiza um usuário
  *     description: Rota para atualizar um usuário pelo ID.
