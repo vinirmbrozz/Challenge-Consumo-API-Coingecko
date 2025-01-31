@@ -44,10 +44,7 @@ app.post("/login", async (req, res) => {
         const validPassword = await bcrypt.compare(String(senha), user.senha);
         if (!validPassword) return res.status(401).json({ message: "Credenciais inválidas" });
 
-        console.log("USUARIO", user)
-
         const token = jwt.sign({ id: user.id, nome: user.nome }, env.JWT_SECRET, { expiresIn: "1h" });
-        console.log("TOKEN", token)
         
         res.json({ token });
     } catch (error) {
@@ -90,13 +87,11 @@ app.post("/usuarios", async (req, res) => {
     // Validação da classe
     const user = new Validar(req.body.nome, req.body.email, req.body.senha, req.body.funcao)
     const erros = user.validarCadastro()
-    console.log("VOLTEI DO VALIDAR", erros)
     if (!erros.status) return res.status(400).json(erros)
     
     try {
         // Criptografia da senha
         const hashedPassword = await bcrypt.hash(user.senha, 10);
-        console.log("INSERINDO NO BANCO", user)
         const result = await pool.query(
             "INSERT INTO usuarios (nome, email, senha, funcao) VALUES ($1, $2, $3, $4) RETURNING *", 
             [user.nome, user.email, hashedPassword, user.funcao]

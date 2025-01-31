@@ -16,7 +16,6 @@ const getCripto = async (req, res) => {
     try {
         // RECEBE A CURRENCY 
         const { currency, id } = req.query;
-        console.log(currency)
 
         if (!currency) return res.status(400).json({ message: "Moeda não informada!" });
 
