@@ -1,5 +1,6 @@
 import pg       from "pg";
 import redis    from "../ConexaoRedis/redisClient.js";
+import jwt      from "jsonwebtoken";
 
 const envjs = await redis.getConfig("ENV")
 let env = JSON.parse(envjs)
@@ -76,9 +77,21 @@ const getCripto = async (req, res) => {
         res.json(criptomoedas.filter((criptomoeda) => criptomoeda.id_cripto === id));
 
     } catch (error) {
-        console.error(error);
+        console.log(error);
         res.status(500).json({ message: "Erro ao buscar criptomoedas: ", error });
     }
 };
 
-export default getCripto
+// Autenticação JWT para usuários
+const authenticateToken = (req, res, next) => {
+    const token = req.header("Authorization");
+    if (!token) return res.status(401).json({ message: "Token não encontrado" });
+    
+    jwt.verify(token, env.JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ message: "Token inválido" });
+        req.user = user;
+        next();
+    });
+};
+
+export default { getCripto, authenticateToken }

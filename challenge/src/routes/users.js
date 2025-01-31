@@ -5,6 +5,7 @@ import jwt          from "jsonwebtoken";
 import bcrypt       from "bcrypt";
 import Validar      from "../Class/class.js"
 import swaggerDocs  from "../Functions/swagger.js";
+import authenticateToken from "../Functions/functions.js";
 
 const envjs = await redis.getConfig("ENV")
 let env = JSON.parse(envjs)
@@ -19,30 +20,34 @@ app.use(express.json());
 
 swaggerDocs(app, env.LISTEN_PORT)
 
-// Autenticação JWT para usuários
-const authenticateToken = (req, res, next) => {
-    const token = req.header("Authorization");
-    if (!token) return res.status(401).json({ message: "Acesso negado" });
+// // Autenticação JWT para usuários
+// const authenticateToken = (req, res, next) => {
+//     const token = req.header("Authorization");
+//     if (!token) return res.status(401).json({ message: "Token não encontrado" });
     
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ message: "Token inválido" });
-        req.user = user;
-        next();
-    });
-};
+//     jwt.verify(token, env.JWT_SECRET, (err, user) => {
+//         if (err) return res.status(403).json({ message: "Token inválido" });
+//         req.user = user;
+//         next();
+//     });
+// };
 
 // Autenticar usuário
 app.post("/login", async (req, res) => {
     const { email, senha } = req.body;
     try {
-        const result = await pool.query("SELECT * FROM usuarios WHERE email = $1", [email]);
+        const result = await pool.query("SELECT * FROM usuarios WHERE email = $1 LIMIT 1", [String(email)]);
+
         if (result.rows.length === 0) return res.status(401).json({ message: "Credenciais inválidas" });
 
         const user = result.rows[0];
-        const validPassword = await bcrypt.compare(String(senha), user.senha);
-        if (!validPassword) return res.status(401).json({ message: "Credenciais inválidas" });
+        // const validPassword = await bcrypt.compare(String(senha), user.senha);
+        // if (!validPassword) return res.status(401).json({ message: "Credenciais inválidas" });
 
-        // const token = jwt.sign({ id: user.id, funcao: user.funcao }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        console.log("USUARIO", user)
+
+        const token = jwt.sign({ id: user.id, nome: user.nome }, env.JWT_SECRET, { expiresIn: "1h" });
+        console.log("TOKEN", token)
         
         res.json({ token });
     } catch (error) {
@@ -143,7 +148,7 @@ app.post("/usuarios", async (req, res) => {
  */
 
 // Atualizar usuário
-app.put("/usuarios/:id", async (req, res) => {
+app.put("/usuarios/:id", authenticateToken.authenticateToken, async (req, res) => {
     const { id } = req.params;
     const user = new Validar(req.body.nome, req.body.email, req.body.senha, req.body.funcao)
     const erros = user.validarAlteracao()
@@ -251,7 +256,7 @@ app.put("/usuarios/:id", async (req, res) => {
  */
 
 // Buscar todos os usuários ou filtrar por email/id
-app.get("/usuarios", /*authenticateToken,*/ async (req, res) => {
+app.get("/usuarios", authenticateToken.authenticateToken, async (req, res) => {
     const { email, id } = req.query;
 
     try {
