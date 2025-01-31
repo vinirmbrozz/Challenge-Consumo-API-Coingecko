@@ -1,9 +1,10 @@
-import express  from "express";
-import pg       from "pg";
-import redis    from "../ConexaoRedis/redisClient.js";
-import jwt      from "jsonwebtoken";
-import bcrypt   from "bcrypt";
-import Validar  from "../Class/class.js"
+import express      from "express";
+import pg           from "pg";
+import redis        from "../ConexaoRedis/redisClient.js";
+import jwt          from "jsonwebtoken";
+import bcrypt       from "bcrypt";
+import Validar      from "../Class/class.js"
+import swaggerDocs  from "../Functions/swagger.js";
 
 const envjs = await redis.getConfig("ENV")
 let env = JSON.parse(envjs)
@@ -15,6 +16,9 @@ const pool = new Pool({
 });
 
 app.use(express.json());
+
+swaggerDocs(app, env.LISTEN_PORT)
+
 // Autenticação JWT para usuários
 const authenticateToken = (req, res, next) => {
     const token = req.header("Authorization");
@@ -46,6 +50,36 @@ app.post("/login", async (req, res) => {
     }
 });
 
+
+/**
+ * @swagger
+ * /usuarios:
+ *   post:
+ *     summary: Cria um novo usuário
+ *     description: Rota para criar um usuário com nome, email, senha e função.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nome:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               senha:
+ *                 type: string
+ *               funcao:
+ *                 type: string
+ *                 enum: [admin, cliente]
+ *     responses:
+ *       201:
+ *         description: Usuário criado com sucesso
+ *       400:
+ *         description: Erro de validação
+ */
+
 // Criar usuário
 app.post("/usuarios", async (req, res) => {
     // Validação da classe
@@ -72,6 +106,41 @@ app.post("/usuarios", async (req, res) => {
         res.status(500).json({ message: "Erro ao criar usuário", error });
     }
 });
+
+/**
+ * @swagger
+ * /usuarios/{id}:
+ *   put:
+ *     summary: Atualiza um usuário
+ *     description: Rota para atualizar um usuário pelo ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nome:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               funcao:
+ *                 type: string
+ *                 enum: [admin, cliente]
+ *     responses:
+ *       200:
+ *         description: Usuário atualizado com sucesso
+ *       400:
+ *         description: Nenhum campo enviado para atualização
+ *       404:
+ *         description: Usuário não encontrado
+ */
 
 // Atualizar usuário
 app.put("/usuarios/:id", async (req, res) => {
@@ -140,6 +209,46 @@ app.put("/usuarios/:id", async (req, res) => {
         res.status(500).json({ message: "Erro ao atualizar usuário", error });
     }
 });
+
+
+/**
+ * @swagger
+ * /api/usuarios:
+ *   get:
+ *     summary: Busca usuários
+ *     description: Retorna todos os usuários ou filtra por email ou id.
+ *     parameters:
+ *       - in: query
+ *         name: email
+ *         schema:
+ *           type: string
+ *         description: Filtra usuários pelo email (busca parcial).
+ *       - in: query
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         description: Filtra usuários pelo ID exato.
+ *     responses:
+ *       200:
+ *         description: Lista de usuários encontrada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   nome:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                   funcao:
+ *                     type: string
+ *       500:
+ *         description: Erro ao buscar usuários
+ */
 
 // Buscar todos os usuários ou filtrar por email/id
 app.get("/usuarios", /*authenticateToken,*/ async (req, res) => {

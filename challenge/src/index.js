@@ -1,7 +1,7 @@
-import express from 'express'
-import user from './routes/users.js'
-import redis   from './ConexaoRedis/redisClient.js'
-import cripto  from './routes/cripto.js'
+import express      from 'express'
+import user         from './routes/users.js'
+import redis        from './ConexaoRedis/redisClient.js'
+import cripto       from './routes/cripto.js'
 
 const app = express()
 app.use(express.json())
