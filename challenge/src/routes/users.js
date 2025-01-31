@@ -57,7 +57,6 @@ swaggerDocs(app, env.LISTEN_PORT)
  *               type: object
  *               properties:
  *                 token:
- *                   type: string
  *         description: Retorna o token de autenticação para ser utilizado no header Authorization
  *       401:
  *         description: Credenciais inválidas
