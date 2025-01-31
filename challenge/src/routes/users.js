@@ -32,6 +32,37 @@ swaggerDocs(app, env.LISTEN_PORT)
 //     });
 // };
 
+/**
+ * @swagger
+ * /api/login:
+ *   post:
+ *     summary: Autenticação de usuários com email e senha.
+ *     description: Rota para autenticar um usuário já cadastrado.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema: 
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               senha:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *         description: Retorna o token de autenticação para ser utilizado no header Authorization
+ *       401:
+ *         description: Credenciais inválidas
+ */
+
 // Autenticar usuário
 app.post("/login", async (req, res) => {
     const { email, senha } = req.body;
